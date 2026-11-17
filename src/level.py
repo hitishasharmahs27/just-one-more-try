@@ -213,7 +213,8 @@ class Level:
 
                 elif ch == TILE_GOAL:
                     self.goal = rect.copy()
-                    self.platforms.append(rect.copy())
+                    # Note: goal is an trigger area, not a solid wall,
+                    # so the player can enter it to complete the level.
 
                 elif ch == TILE_SPAWN:
                     cx = col_idx * TILE_SIZE + TILE_SIZE // 2
