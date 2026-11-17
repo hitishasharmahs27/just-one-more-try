@@ -9,6 +9,7 @@ from settings import (
     TROLL_CHECKPOINT_FAIL_CHANCE, TROLL_CHECKPOINT_NEVER_TWICE,
     TROLL_SLIPPERY_FRICTION_MULT,
     TROLL_VANISH_DELAY_S, TROLL_VANISH_RESPAWN_S,
+    LEVEL_DIFFICULTY,
     JUMP_SPEED, DEBUG
 )
 
@@ -42,8 +43,13 @@ class TrollModifier:
 class VariableJump(TrollModifier):
     name = "variable_jump"
 
+    def __init__(self):
+        super().__init__()
+        self.factor_min = TROLL_JUMP_FACTOR_MIN
+        self.factor_max = TROLL_JUMP_FACTOR_MAX
+
     def on_jump(self, base_jump_speed):
-        scaled = base_jump_speed * self.rng.uniform(TROLL_JUMP_FACTOR_MIN, TROLL_JUMP_FACTOR_MAX)
+        scaled = base_jump_speed * self.rng.uniform(self.factor_min, self.factor_max)
         # Note: In Pygame, upward velocity is negative (JUMP_SPEED = -680.0).
         if base_jump_speed < 0:
             min_speed = JUMP_SPEED * TROLL_JUMP_MIN_SAFE
@@ -61,6 +67,10 @@ class InputDelay(TrollModifier):
         super().__init__()
         self._queue = collections.deque()
         self._level_time = 0.0
+        self.delay_min_ms = TROLL_INPUT_DELAY_MIN_MS
+        self.delay_max_ms = TROLL_INPUT_DELAY_MAX_MS
+        self.delay_chance = TROLL_INPUT_DELAY_CHANCE
+        self.delay_grace_s = TROLL_INPUT_DELAY_GRACE_S
 
     def on_input(self, action_keys, dt):
         self._level_time += dt
@@ -68,7 +78,7 @@ class InputDelay(TrollModifier):
         level_time = action_keys.get('_level_time', self._level_time)
 
         # Grace period: pass through unmodified
-        if level_time < TROLL_INPUT_DELAY_GRACE_S:
+        if level_time < self.delay_grace_s:
             return action_keys, dt
 
         try:
@@ -78,8 +88,8 @@ class InputDelay(TrollModifier):
 
         # Possibly delay the jump
         modified_keys = dict(action_keys)
-        if modified_keys.get('jump') and self.rng.random() < TROLL_INPUT_DELAY_CHANCE:
-            delay_ms = self.rng.randint(TROLL_INPUT_DELAY_MIN_MS, TROLL_INPUT_DELAY_MAX_MS)
+        if modified_keys.get('jump') and self.rng.random() < self.delay_chance:
+            delay_ms = self.rng.randint(self.delay_min_ms, self.delay_max_ms)
             # Schedule the real jump for later
             delayed_keys = dict(action_keys)
             delayed_keys['jump'] = True
@@ -110,6 +120,7 @@ class UnreliableCheckpoints(TrollModifier):
     def __init__(self):
         super().__init__()
         self._last_failed = False
+        self.fail_chance = TROLL_CHECKPOINT_FAIL_CHANCE
 
     def on_checkpoint(self, index):
         # If NEVER_TWICE is set, don't fail twice in a row
@@ -117,7 +128,7 @@ class UnreliableCheckpoints(TrollModifier):
             self._last_failed = False
             return True
 
-        if self.rng.random() < TROLL_CHECKPOINT_FAIL_CHANCE:
+        if self.rng.random() < self.fail_chance:
             self._last_failed = True
             return False  # checkpoint fails to save
         else:
@@ -202,6 +213,25 @@ class TrollEngine:
         self._active_names = [n for n in names if n in self._registry]
         for m in self._all:
             m.enabled = (m.name in self._active_names)
+
+    def apply_difficulty(self, level_num: int):
+        """Tune modifier hardness parameters based on the current level."""
+        diff = LEVEL_DIFFICULTY.get(level_num, LEVEL_DIFFICULTY.get(1, {}))
+        if 'variable_jump' in self._registry:
+            vj = self._registry['variable_jump']
+            vj.factor_min = diff.get('jump_min', vj.factor_min)
+            vj.factor_max = diff.get('jump_max', vj.factor_max)
+
+        if 'input_delay' in self._registry:
+            idly = self._registry['input_delay']
+            idly.delay_min_ms = diff.get('delay_min_ms', idly.delay_min_ms)
+            idly.delay_max_ms = diff.get('delay_max_ms', idly.delay_max_ms)
+            idly.delay_chance = diff.get('delay_chance', idly.delay_chance)
+            idly.delay_grace_s = diff.get('delay_grace', idly.delay_grace_s)
+
+        if 'unreliable_checkpoints' in self._registry:
+            ucp = self._registry['unreliable_checkpoints']
+            ucp.fail_chance = diff.get('checkpoint_fail_chance', ucp.fail_chance)
 
     def _active_mods(self):
         return [m for m in self._all if m.enabled]

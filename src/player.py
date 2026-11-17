@@ -43,6 +43,9 @@ class Player:
         self.width: int = PLAYER_WIDTH
         self.height: int = PLAYER_HEIGHT
 
+        # Slippery friction multiplier (can be scaled per level)
+        self.slippery_friction_mult: float = TROLL_SLIPPERY_FRICTION_MULT
+
         # Facing direction: 1 for right, -1 for left
         self.facing: int = 1
 
@@ -186,7 +189,7 @@ class Player:
 
         # 6. Slippery-edge friction (applied while on_ground near a slippery tile).
         if self.on_ground and near_slippery_edge(self.get_rect(), slippery_rects):
-            self.vx *= TROLL_SLIPPERY_FRICTION_MULT
+            self.vx *= getattr(self, 'slippery_friction_mult', TROLL_SLIPPERY_FRICTION_MULT)
 
         # 7. Generic troll per-tick hook (misc effects, e.g. fake wall spam).
         on_update = self._hooks.get('on_update')

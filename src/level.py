@@ -8,7 +8,7 @@ checkpoints, goal, slippery, vanishing, invisible), and manages level transition
 import os
 import pygame
 from settings import TILE_SIZE, SCREEN_W, SCREEN_H
-from settings import TROLL_VANISH_DELAY_S, TROLL_VANISH_RESPAWN_S
+from settings import TROLL_VANISH_DELAY_S, TROLL_VANISH_RESPAWN_S, LEVEL_DIFFICULTY
 
 
 # ---------------------------------------------------------------------------
@@ -85,7 +85,7 @@ class VanishingTile(dict):
 
     @property
     def vanish_delay(self) -> float:
-        return TROLL_VANISH_DELAY_S
+        return self.get('vanish_delay_override', TROLL_VANISH_DELAY_S)
 
 
 class Checkpoint(pygame.Rect):
@@ -251,9 +251,10 @@ class Level:
         if not troll_active:
             return
         for vt in self.vanishing_tiles:
+            delay = vt.get('vanish_delay_override', TROLL_VANISH_DELAY_S)
             if vt['state'] == 'vanishing':
                 vt['timer'] += dt
-                if vt['timer'] >= TROLL_VANISH_DELAY_S:
+                if vt['timer'] >= delay:
                     vt['state'] = 'gone'
                     vt['timer'] = 0.0
             elif vt['state'] == 'gone':
@@ -262,6 +263,13 @@ class Level:
                     vt['state']   = 'solid'
                     vt['timer']   = 0.0
                     vt['touched'] = False
+
+    def set_difficulty(self, level_num: int) -> None:
+        """Scale level-specific parameters (like vanishing platform timers) with difficulty."""
+        diff = LEVEL_DIFFICULTY.get(level_num, {})
+        v_delay = diff.get('vanish_delay_s', TROLL_VANISH_DELAY_S)
+        for vt in self.vanishing_tiles:
+            vt['vanish_delay_override'] = v_delay
 
     def notify_vanishing_touched(self, rect: pygame.Rect) -> None:
         """

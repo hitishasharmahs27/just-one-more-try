@@ -26,7 +26,7 @@ from settings import (
     PLATFORM_COLOUR, HAZARD_COLOUR,
     CHECKPOINT_COLOUR_ACTIVE, CHECKPOINT_COLOUR_INACTIVE,
     GOAL_COLOUR, PLAYER_COLOUR, SLIPPERY_COLOUR,
-    WHITE, BLACK,
+    WHITE, BLACK, LEVEL_DIFFICULTY,
 )
 from player import Player
 from level import LevelManager
@@ -96,6 +96,7 @@ class Game:
 
         # 2 & 3. Tell troll engine which trolls are active and hand it the level
         self.troll_engine.set_active(self.level.active_trolls)
+        self.troll_engine.apply_difficulty(index + 1)
         self.troll_engine.set_level(self.level)
 
         # 4. Collect behaviour hooks the troll engine exposes to the player
@@ -103,10 +104,15 @@ class Game:
 
         # 5. Spawn the player at the level's spawn point
         self.player = Player(self.level.spawn, hooks)
+        diff = LEVEL_DIFFICULTY.get(index + 1, {})
+        if 'slippery_mult' in diff:
+            self.player.slippery_friction_mult = diff['slippery_mult']
 
         # 6. Reset both subsystems so troll timers / vanishing tiles start fresh
         self.troll_engine.reset()
         self.level.reset()
+        if hasattr(self.level, 'set_difficulty'):
+            self.level.set_difficulty(index + 1)
 
         # 7. Per-level attempt counter
         self.level_attempts = 0
