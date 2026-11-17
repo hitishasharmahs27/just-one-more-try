@@ -10,7 +10,7 @@ import pygame
 from settings import (
     WALK_SPEED, JUMP_SPEED, GRAVITY, MAX_FALL_SPEED, FIXED_DT,
     GROUND_FRICTION, AIR_FRICTION, TROLL_SLIPPERY_FRICTION_MULT,
-    TILE_SIZE,
+    TILE_SIZE, PLAYER_WIDTH, PLAYER_HEIGHT,
 )
 from physics import apply_gravity, resolve_x, resolve_y, near_slippery_edge
 
@@ -39,9 +39,9 @@ class Player:
         self.vx: float = 0.0
         self.vy: float = 0.0
 
-        # Size — slight inset from tile so the player can fit into passages
-        self.width: int = TILE_SIZE - 4
-        self.height: int = TILE_SIZE - 4
+        # Size — configurable via settings.py (defaults to TILE_SIZE - 4)
+        self.width: int = PLAYER_WIDTH
+        self.height: int = PLAYER_HEIGHT
 
         # Facing direction: 1 for right, -1 for left
         self.facing: int = 1

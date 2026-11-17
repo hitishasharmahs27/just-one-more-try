@@ -45,6 +45,11 @@ GROUND_FRICTION = 0.75
 AIR_FRICTION    = 0.90
 FIXED_DT        = 1.0 / 60.0
 
+# Player dimensions (pixels)
+# Default is TILE_SIZE - 4 (44x44). You can tune width and height here:
+PLAYER_WIDTH   = TILE_SIZE - 4
+PLAYER_HEIGHT  = TILE_SIZE - 4
+
 # ── TROLL — Variable Jump Height ─────────────────────────────────────────────
 TROLL_JUMP_FACTOR_MIN  = 0.80
 TROLL_JUMP_FACTOR_MAX  = 1.20
