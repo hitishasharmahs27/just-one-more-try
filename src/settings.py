@@ -46,9 +46,9 @@ AIR_FRICTION    = 0.90
 FIXED_DT        = 1.0 / 60.0
 
 # Player dimensions (pixels)
-# Default is TILE_SIZE - 4 (44x44). You can tune width and height here:
+# Width remains standard tile width minus inset (44px), height increased to 60px:
 PLAYER_WIDTH   = TILE_SIZE - 4
-PLAYER_HEIGHT  = TILE_SIZE - 4
+PLAYER_HEIGHT  = 60
 
 # ── TROLL — Variable Jump Height ─────────────────────────────────────────────
 TROLL_JUMP_FACTOR_MIN  = 0.80
