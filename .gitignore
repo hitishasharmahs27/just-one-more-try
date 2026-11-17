@@ -70,3 +70,9 @@ desktop.ini
 *.log
 *.tmp
 tmp/
+
+# Example reports and generated documentation deliverables
+Example_Project_Report.pdf
+PROJECT_REPORT.md
+*Project_Report*
+
