@@ -388,20 +388,140 @@ class Game:
                 pygame.draw.rect(surface, WHITE, level.goal, 1)
 
     def _draw_player(self, surface: pygame.Surface) -> None:
-        """Draw the player as a coloured rectangle with simple 'eyes'."""
+        """Draw Shinchan character sprite for the player."""
         p = self.player
         rect = p.rect
+        rx, ry, rw, rh = rect.x, rect.y, rect.width, rect.height
+        facing = getattr(p, 'facing', 1)
 
-        # Body
-        pygame.draw.rect(surface, PLAYER_COLOUR, rect)
+        # Palette
+        SKIN = (255, 218, 185)       # warm peach skin
+        CHEEK = (255, 140, 160)      # rosy blush
+        HAIR = (20, 20, 20)          # black hair / thick brows
+        SHIRT = (235, 45, 35)        # iconic red t-shirt
+        SHORTS = (255, 225, 30)      # bright yellow shorts
+        SHOES = (255, 255, 255)      # white socks/shoes
+        OUTLINE = (30, 20, 20)       # crisp cartoon outline
+        EYE_WHITE = (255, 255, 255)
 
-        # Simple pixel eyes so the player has a 'face'
-        eye_r = max(2, rect.width // 8)
-        eye_y = rect.top + rect.height // 4
-        left_eye_x = rect.left + rect.width // 3
-        right_eye_x = rect.right - rect.width // 3
-        pygame.draw.circle(surface, BLACK, (left_eye_x, eye_y), eye_r)
-        pygame.draw.circle(surface, BLACK, (right_eye_x, eye_y), eye_r)
+        # 1. Shoes / Feet (Bottom)
+        foot_y = ry + int(rh * 0.90)
+        foot_h = rh - int(rh * 0.90)
+        foot_w = int(rw * 0.32)
+        # Left and Right shoes
+        pygame.draw.ellipse(surface, SHOES, (rx + int(rw * 0.12), foot_y, foot_w, foot_h))
+        pygame.draw.ellipse(surface, OUTLINE, (rx + int(rw * 0.12), foot_y, foot_w, foot_h), 1)
+        pygame.draw.ellipse(surface, SHOES, (rx + int(rw * 0.56), foot_y, foot_w, foot_h))
+        pygame.draw.ellipse(surface, OUTLINE, (rx + int(rw * 0.56), foot_y, foot_w, foot_h), 1)
+
+        # 2. Yellow Shorts
+        pants_y = ry + int(rh * 0.68)
+        pants_h = int(rh * 0.24)
+        pants_w = int(rw * 0.76)
+        pants_x = rx + int(rw * 0.12)
+        pygame.draw.rect(surface, SHORTS, (pants_x, pants_y, pants_w, pants_h), border_radius=3)
+        pygame.draw.rect(surface, OUTLINE, (pants_x, pants_y, pants_w, pants_h), 1, border_radius=3)
+
+        # 3. Red Shirt / Torso
+        shirt_y = ry + int(rh * 0.44)
+        shirt_h = int(rh * 0.28)
+        shirt_w = int(rw * 0.82)
+        shirt_x = rx + int(rw * 0.09)
+        pygame.draw.rect(surface, SHIRT, (shirt_x, shirt_y, shirt_w, shirt_h), border_radius=4)
+        pygame.draw.rect(surface, OUTLINE, (shirt_x, shirt_y, shirt_w, shirt_h), 1, border_radius=4)
+
+        # 4. Shinchan's iconic chubby head (wider on the cheek side)
+        head_y = ry + 2
+        head_h = int(rh * 0.48)
+        head_w = int(rw * 0.88)
+        head_x = rx + int(rw * 0.06)
+
+        # Black hair base (slightly behind head)
+        hair_rect = pygame.Rect(head_x, head_y, head_w, int(head_h * 0.60))
+        pygame.draw.ellipse(surface, HAIR, hair_rect)
+
+        # Chubby head ellipse
+        face_rect = pygame.Rect(head_x, head_y + 3, head_w, head_h)
+        pygame.draw.ellipse(surface, SKIN, face_rect)
+        pygame.draw.ellipse(surface, OUTLINE, face_rect, 1)
+
+        # Shinchan spiky/cropped hair silhouette on top
+        if facing == 1:
+            pygame.draw.polygon(surface, HAIR, [
+                (head_x + 2, head_y + 10),
+                (head_x + int(head_w * 0.20), head_y),
+                (head_x + int(head_w * 0.55), head_y),
+                (head_x + int(head_w * 0.70), head_y + 8),
+                (head_x + 5, head_y + 14)
+            ])
+        else:
+            pygame.draw.polygon(surface, HAIR, [
+                (head_x + head_w - 2, head_y + 10),
+                (head_x + head_w - int(head_w * 0.20), head_y),
+                (head_x + head_w - int(head_w * 0.55), head_y),
+                (head_x + head_w - int(head_w * 0.70), head_y + 8),
+                (head_x + head_w - 5, head_y + 14)
+            ])
+
+        # 5. Thick Signature Wavy Eyebrows
+        brow_y = head_y + int(head_h * 0.30)
+        brow_w = max(4, int(head_w * 0.26))
+        brow_h = max(2, int(head_h * 0.16))
+
+        if facing == 1:
+            # facing right
+            b1_x = head_x + int(head_w * 0.25)
+            b2_x = head_x + int(head_w * 0.58)
+        else:
+            # facing left
+            b1_x = head_x + int(head_w * 0.16)
+            b2_x = head_x + int(head_w * 0.49)
+
+        pygame.draw.ellipse(surface, HAIR, (b1_x, brow_y, brow_w, brow_h))
+        pygame.draw.ellipse(surface, HAIR, (b2_x, brow_y, brow_w, brow_h))
+
+        # 6. Big Cartoony Eyes
+        eye_y = brow_y + brow_h + 1
+        eye_r = max(2, int(head_w * 0.10))
+        pupil_r = max(1, eye_r - 2)
+
+        if facing == 1:
+            e1_x = b1_x + brow_w // 2
+            e2_x = b2_x + brow_w // 2
+            pupil_offset = 1
+        else:
+            e1_x = b1_x + brow_w // 2
+            e2_x = b2_x + brow_w // 2
+            pupil_offset = -1
+
+        # Left eye
+        pygame.draw.circle(surface, EYE_WHITE, (e1_x, eye_y + eye_r), eye_r)
+        pygame.draw.circle(surface, OUTLINE, (e1_x, eye_y + eye_r), eye_r, 1)
+        pygame.draw.circle(surface, HAIR, (e1_x + pupil_offset, eye_y + eye_r), pupil_r)
+
+        # Right eye
+        pygame.draw.circle(surface, EYE_WHITE, (e2_x, eye_y + eye_r), eye_r)
+        pygame.draw.circle(surface, OUTLINE, (e2_x, eye_y + eye_r), eye_r, 1)
+        pygame.draw.circle(surface, HAIR, (e2_x + pupil_offset, eye_y + eye_r), pupil_r)
+
+        # 7. Rosy Chubby Cheek
+        cheek_r = max(2, int(head_w * 0.11))
+        if facing == 1:
+            cheek_x = head_x + int(head_w * 0.74)
+        else:
+            cheek_x = head_x + int(head_w * 0.26)
+        cheek_y = eye_y + eye_r + 2
+        pygame.draw.circle(surface, CHEEK, (cheek_x, cheek_y), cheek_r)
+
+        # 8. Mischievous smile / mouth
+        mouth_y = cheek_y + 1
+        mouth_w = max(3, int(head_w * 0.18))
+        if facing == 1:
+            mouth_x = head_x + int(head_w * 0.50)
+            pygame.draw.arc(surface, OUTLINE, (mouth_x, mouth_y - 2, mouth_w, 6), 3.14, 6.28, 2)
+        else:
+            mouth_x = head_x + int(head_w * 0.32)
+            pygame.draw.arc(surface, OUTLINE, (mouth_x, mouth_y - 2, mouth_w, 6), 3.14, 6.28, 2)
 
         if DEBUG and DEBUG_SHOW_HITBOXES:
             pygame.draw.rect(surface, WHITE, rect, 1)

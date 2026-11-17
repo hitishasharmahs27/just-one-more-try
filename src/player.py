@@ -43,6 +43,9 @@ class Player:
         self.width: int = TILE_SIZE - 4
         self.height: int = TILE_SIZE - 4
 
+        # Facing direction: 1 for right, -1 for left
+        self.facing: int = 1
+
         # State
         self.on_ground: bool = False
         self.alive: bool = True
@@ -115,9 +118,11 @@ class Player:
         moving_horizontally = False
         if modified_keys.get('left'):
             self.vx = -WALK_SPEED
+            self.facing = -1
             moving_horizontally = True
         elif modified_keys.get('right'):
             self.vx = WALK_SPEED
+            self.facing = 1
             moving_horizontally = True
 
         # 5. Apply friction when no horizontal input.
